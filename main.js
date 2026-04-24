@@ -1,13 +1,16 @@
-// ─────────────────────────────────────────────
-//  IDentix — Multi-step form handler
-//  Data is saved in localStorage at each step
-//  and submitted all at once on Step 4.
-// ─────────────────────────────────────────────
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────
 //  IDentix — Multi-step form handler
 //  Custom JS validation with inline error display
 //  Data saved in localStorage across steps
+//  Redirects to success.html or error.html on submit
 // ─────────────────────────────────────────────
 
 const STORAGE_KEY = "identix_form_data";
@@ -37,39 +40,30 @@ function prefillForm(fieldIds) {
 
 // ── Validation UI helpers ──────────────────────
 
-/** Outline a field in red and show an error message below it */
 function showError(fieldId, message) {
   const field = document.getElementById(fieldId);
   if (!field) return;
-
-  field.style.border = "2px solid red";
+  field.style.border       = "2px solid red";
   field.style.borderRadius = "6px";
-  field.style.outline = "none";
+  field.style.outline      = "none";
 
-  // Remove any existing error for this field
   const existing = document.getElementById("err-" + fieldId);
   if (existing) existing.remove();
 
   const msg = document.createElement("p");
   msg.id = "err-" + fieldId;
   msg.textContent = "⚠ " + message;
-  msg.style.cssText =
-    "color: red; font-size: 13px; margin: 5px 0 0 2px; font-weight: 500;";
+  msg.style.cssText = "color:red;font-size:13px;margin:5px 0 0 2px;font-weight:500;";
   field.insertAdjacentElement("afterend", msg);
 }
 
-/** Remove red border and error message from a field */
 function clearError(fieldId) {
   const field = document.getElementById(fieldId);
-  if (field) {
-    field.style.border = "";
-    field.style.outline = "";
-  }
+  if (field) { field.style.border = ""; field.style.outline = ""; }
   const msg = document.getElementById("err-" + fieldId);
   if (msg) msg.remove();
 }
 
-/** Live-clear errors as the user types / changes a field */
 function addLiveValidation(fieldId) {
   const field = document.getElementById(fieldId);
   if (!field) return;
@@ -77,7 +71,6 @@ function addLiveValidation(fieldId) {
   field.addEventListener("change", () => clearError(fieldId));
 }
 
-/** Count only digit characters in a string */
 function countDigits(value) {
   return value.replace(/\D/g, "").length;
 }
@@ -85,62 +78,31 @@ function countDigits(value) {
 // ── Per-step validators ────────────────────────
 
 function validateStep1() {
-  ["firstname","secondname","email","contact","date","place","gender"]
-    .forEach(clearError);
+  ["firstname","secondname","email","contact","date","place","gender"].forEach(clearError);
   let valid = true;
 
-  // First name
   const firstname = document.getElementById("firstname").value.trim();
-  if (!firstname) {
-    showError("firstname", "First name is required."); valid = false;
-  } else if (firstname.length < 4) {
-    showError("firstname", "First name must be at least 4 characters."); valid = false;
-  }
+  if (!firstname)         { showError("firstname","First name is required."); valid = false; }
+  else if (firstname.length < 2) { showError("firstname","First name must be at least 2 characters."); valid = false; }
 
-  // Second name
   const secondname = document.getElementById("secondname").value.trim();
-  if (!secondname) {
-    showError("secondname", "Second name is required."); valid = false;
-  } else if (secondname.length < 4) {
-    showError("secondname", "Second name must be at least 4 characters."); valid = false;
-  }
+  if (!secondname)          { showError("secondname","Second name is required."); valid = false; }
+  else if (secondname.length < 2) { showError("secondname","Second name must be at least 2 characters."); valid = false; }
 
-  // Email
   const email = document.getElementById("email").value.trim();
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email) {
-    showError("email", "Email address is required."); valid = false;
-  } else if (!emailRegex.test(email)) {
-    showError("email", "Enter a valid email address (e.g. johndoe@gmail.com)."); valid = false;
-  }
+  if (!email)                              { showError("email","Email address is required."); valid = false; }
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError("email","Enter a valid email address (e.g. johndoe@gmail.com)."); valid = false; }
 
-  // Phone — exactly 9 digits
   const contact = document.getElementById("contact").value.trim();
-  if (!contact) {
-    showError("contact", "Phone number is required."); valid = false;
-  } else if (countDigits(contact) !== 9) {
-    showError("contact", "Phone number must be exactly 9 digits (e.g. 677123456)."); valid = false;
-  }
+  if (!contact)                      { showError("contact","Phone number is required."); valid = false; }
+  else if (countDigits(contact) !== 9) { showError("contact","Phone number must be exactly 9 digits (e.g. 677123456)."); valid = false; }
 
-  // Date of birth
   const date = document.getElementById("date").value;
-  if (!date) {
-    showError("date", "Date of birth is required."); valid = false;
-  } else if (new Date(date) >= new Date()) {
-    showError("date", "Date of birth must be in the past."); valid = false;
-  }
+  if (!date)                         { showError("date","Date of birth is required."); valid = false; }
+  else if (new Date(date) >= new Date()) { showError("date","Date of birth must be in the past."); valid = false; }
 
-  // Place of birth
-  const place = document.getElementById("place").value.trim();
-  if (!place) {
-    showError("place", "Place of birth is required."); valid = false;
-  }
-
-  // Gender
-  const gender = document.getElementById("gender").value;
-  if (!gender) {
-    showError("gender", "Please select your gender."); valid = false;
-  }
+  if (!document.getElementById("place").value.trim()) { showError("place","Place of birth is required."); valid = false; }
+  if (!document.getElementById("gender").value)       { showError("gender","Please select your gender."); valid = false; }
 
   return valid;
 }
@@ -149,21 +111,11 @@ function validateStep2() {
   ["school","Department","campus","specialty","level"].forEach(clearError);
   let valid = true;
 
-  if (!document.getElementById("school").value.trim()) {
-    showError("school", "Institution name is required."); valid = false;
-  }
-  if (!document.getElementById("Department").value.trim()) {
-    showError("Department", "Department is required."); valid = false;
-  }
-  if (!document.getElementById("campus").value) {
-    showError("campus", "Please select a campus."); valid = false;
-  }
-  if (!document.getElementById("specialty").value.trim()) {
-    showError("specialty", "Specialty is required."); valid = false;
-  }
-  if (!document.getElementById("level").value.trim()) {
-    showError("level", "Level is required (e.g. HND1)."); valid = false;
-  }
+  if (!document.getElementById("school").value.trim())     { showError("school","Institution name is required."); valid = false; }
+  if (!document.getElementById("Department").value.trim()) { showError("Department","Department is required."); valid = false; }
+  if (!document.getElementById("campus").value)            { showError("campus","Please select a campus."); valid = false; }
+  if (!document.getElementById("specialty").value.trim())  { showError("specialty","Specialty is required."); valid = false; }
+  if (!document.getElementById("level").value.trim())      { showError("level","Level is required (e.g. HND1)."); valid = false; }
 
   return valid;
 }
@@ -172,15 +124,9 @@ function validateStep3() {
   ["address","nationality","city"].forEach(clearError);
   let valid = true;
 
-  if (!document.getElementById("address").value.trim()) {
-    showError("address", "Address is required."); valid = false;
-  }
-  if (!document.getElementById("nationality").value.trim()) {
-    showError("nationality", "Nationality is required."); valid = false;
-  }
-  if (!document.getElementById("city").value.trim()) {
-    showError("city", "City is required."); valid = false;
-  }
+  if (!document.getElementById("address").value.trim())     { showError("address","Address is required."); valid = false; }
+  if (!document.getElementById("nationality").value.trim()) { showError("nationality","Nationality is required."); valid = false; }
+  if (!document.getElementById("city").value.trim())        { showError("city","City is required."); valid = false; }
 
   return valid;
 }
@@ -189,21 +135,13 @@ function validateStep4() {
   ["emergencyName","emergencyPhone","img"].forEach(clearError);
   let valid = true;
 
-  // Emergency name
   const eName = document.getElementById("emergencyName").value.trim();
-  if (!eName) {
-    showError("emergencyName", "Emergency contact name is required."); valid = false;
-  }
+  if (!eName) { showError("emergencyName","Emergency contact name is required."); valid = false; }
 
-  // Emergency phone — exactly 9 digits
   const ePhone = document.getElementById("emergencyPhone").value.trim();
-  if (!ePhone) {
-    showError("emergencyPhone", "Emergency contact phone is required."); valid = false;
-  } else if (countDigits(ePhone) !== 9) {
-    showError("emergencyPhone", "Phone number must be exactly 9 digits (e.g. 677123456)."); valid = false;
-  }
+  if (!ePhone)                         { showError("emergencyPhone","Emergency contact phone is required."); valid = false; }
+  else if (countDigits(ePhone) !== 9)  { showError("emergencyPhone","Phone number must be exactly 9 digits (e.g. 677123456)."); valid = false; }
 
-  // Checkbox
   const checkbox = document.getElementById("agreeCheckbox");
   const existingCheckErr = document.getElementById("err-agreeCheckbox");
   if (!checkbox.checked) {
@@ -211,7 +149,7 @@ function validateStep4() {
       const msg = document.createElement("p");
       msg.id = "err-agreeCheckbox";
       msg.textContent = "⚠ You must agree to the Terms & Conditions to continue.";
-      msg.style.cssText = "color: red; font-size: 13px; margin: 5px 0 0 2px; font-weight: 500;";
+      msg.style.cssText = "color:red;font-size:13px;margin:5px 0 0 2px;font-weight:500;";
       checkbox.parentElement.insertAdjacentElement("afterend", msg);
     }
     valid = false;
@@ -219,13 +157,23 @@ function validateStep4() {
     if (existingCheckErr) existingCheckErr.remove();
   }
 
-  // Photo
   const img = document.getElementById("img");
-  if (img && img.files.length === 0) {
-    showError("img", "Please upload a photo for your ID card."); valid = false;
-  }
+  if (img && img.files.length === 0) { showError("img","Please upload a photo for your ID card."); valid = false; }
 
   return valid;
+}
+
+// ── Submit button state helpers ────────────────
+
+function setSubmitting(btn) {
+  btn.disabled = true;
+  btn.dataset.original = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> &nbsp;Submitting…';
+}
+
+function resetSubmit(btn) {
+  btn.disabled = false;
+  btn.innerHTML = btn.dataset.original;
 }
 
 // ── Step 1 ─────────────────────────────────────
@@ -233,8 +181,7 @@ function validateStep4() {
 const step1Form = document.getElementById("step1Form");
 if (step1Form) {
   prefillForm(["firstname","secondname","email","contact","date","place","gender"]);
-  ["firstname","secondname","email","contact","date","place","gender"]
-    .forEach(addLiveValidation);
+  ["firstname","secondname","email","contact","date","place","gender"].forEach(addLiveValidation);
 
   step1Form.addEventListener("submit", function (e) {
     e.preventDefault();
@@ -292,14 +239,13 @@ if (step3Form) {
   });
 }
 
-// ── Step 4 ─────────────────────────────────────
+// ── Step 4 — Final submit ──────────────────────
 
 const step4Form = document.getElementById("step4Form");
 if (step4Form) {
   prefillForm(["emergencyName","emergencyPhone"]);
   ["emergencyName","emergencyPhone"].forEach(addLiveValidation);
 
-  // Clear checkbox error when user ticks it
   const agreeBox = document.getElementById("agreeCheckbox");
   if (agreeBox) {
     agreeBox.addEventListener("change", () => {
@@ -308,7 +254,6 @@ if (step4Form) {
     });
   }
 
-  // Clear photo error when user picks a file
   const imgInput = document.getElementById("img");
   if (imgInput) imgInput.addEventListener("change", () => clearError("img"));
 
@@ -322,32 +267,68 @@ if (step4Form) {
       emergencyPhone: document.getElementById("emergencyPhone").value.trim(),
     };
 
-    const imgFile = document.getElementById("img").files[0];
+    const imgFile  = document.getElementById("img").files[0];
     const formData = new FormData();
     Object.entries(allData).forEach(([key, val]) => formData.append(key, val));
     if (imgFile) formData.append("img", imgFile);
 
     const submitBtn = step4Form.querySelector("button[type='submit']");
-    try {
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Submitting…";
+    setSubmitting(submitBtn);
 
+    try {
       const response = await fetch("http://127.0.0.1:8000/students", {
         method: "POST",
         body: formData,
       });
 
-      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+      if (!response.ok) {
+        // Pass the HTTP status code to the error page
+        throw new Error(response.status + "|" + response.statusText);
+      }
 
-      await response.json();
-      localStorage.removeItem(STORAGE_KEY);
-      alert("Your ID card request was submitted successfully!");
-      window.location.href = "index2.html";
+      const result = await response.json();
+
+      // Save key info for the success page summary display,
+      // then clear the full multi-step form data
+      const saved = getSavedData();
+      localStorage.setItem("identix_form_data", JSON.stringify({
+        firstname:  saved.firstname  || "",
+        secondname: saved.secondname || "",
+        email:      saved.email      || "",
+        school:     saved.school     || "",
+        ref:        result.ref_number || "",
+      }));
+
+      // ✅ Redirect to success page (no alert)
+      window.location.href = "success.html";
+
     } catch (error) {
-      console.error("Error:", error);
-      alert("Something went wrong. Please try again.\n" + error.message);
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Create my ID card";
+      resetSubmit(submitBtn);
+
+      // Separate HTTP errors (status|text) from network/fetch errors
+      const raw   = error.message || "Unknown error";
+      const parts = raw.split("|");
+
+      let code = "";
+      let msg  = raw;
+
+      if (parts.length === 2 && !isNaN(parts[0])) {
+        // HTTP error thrown above, e.g. "500|Internal Server Error"
+        code = parts[0];
+        msg  = parts[1] || "Server error";
+      } else if (raw.toLowerCase().includes("failed to fetch")) {
+        // Backend is not running or unreachable
+        msg = "Could not connect to the server. Make sure the backend is running on port 8000 and try again.";
+      } else if (raw.toLowerCase().includes("networkerror")) {
+        msg = "A network error occurred. Please check your internet connection.";
+      }
+
+      // Redirect to error.html — URLSearchParams encodes values automatically.
+      // Do NOT use encodeURIComponent here — it would cause double-encoding.
+      const params = new URLSearchParams();
+      if (code) params.set("code", code);
+      params.set("msg", msg);
+      window.location.href = "error.html?" + params.toString();
     }
   });
 }
