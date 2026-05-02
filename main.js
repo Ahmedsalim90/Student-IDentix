@@ -1,28 +1,12 @@
 
 
-
-
-
-
-
-
-// ─────────────────────────────────────────────
-//  IDentix — Multi-step form handler
-//  Custom JS validation with inline error display
-//  Data saved in localStorage across steps
-//  Redirects to success.html or error.html on submit
-// ─────────────────────────────────────────────
-
 const STORAGE_KEY = "identix_form_data";
+const API_BASE    = "https://identix-api-production.up.railway.app";
 
-// ── Storage helpers ────────────────────────────
 
 function getSavedData() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-  } catch {
-    return {};
-  }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch { return {}; }
 }
 
 function saveData(newFields) {
@@ -38,7 +22,6 @@ function prefillForm(fieldIds) {
   });
 }
 
-// ── Validation UI helpers ──────────────────────
 
 function showError(fieldId, message) {
   const field = document.getElementById(fieldId);
@@ -46,10 +29,8 @@ function showError(fieldId, message) {
   field.style.border       = "2px solid red";
   field.style.borderRadius = "6px";
   field.style.outline      = "none";
-
   const existing = document.getElementById("err-" + fieldId);
   if (existing) existing.remove();
-
   const msg = document.createElement("p");
   msg.id = "err-" + fieldId;
   msg.textContent = "⚠ " + message;
@@ -75,34 +56,33 @@ function countDigits(value) {
   return value.replace(/\D/g, "").length;
 }
 
-// ── Per-step validators ────────────────────────
 
 function validateStep1() {
   ["firstname","secondname","email","contact","date","place","gender"].forEach(clearError);
   let valid = true;
 
   const firstname = document.getElementById("firstname").value.trim();
-  if (!firstname)         { showError("firstname","First name is required."); valid = false; }
+  if (!firstname)              { showError("firstname","First name is required."); valid = false; }
   else if (firstname.length < 2) { showError("firstname","First name must be at least 2 characters."); valid = false; }
 
   const secondname = document.getElementById("secondname").value.trim();
-  if (!secondname)          { showError("secondname","Second name is required."); valid = false; }
+  if (!secondname)               { showError("secondname","Second name is required."); valid = false; }
   else if (secondname.length < 2) { showError("secondname","Second name must be at least 2 characters."); valid = false; }
 
   const email = document.getElementById("email").value.trim();
-  if (!email)                              { showError("email","Email address is required."); valid = false; }
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError("email","Enter a valid email address (e.g. johndoe@gmail.com)."); valid = false; }
+  if (!email)                                     { showError("email","Email address is required."); valid = false; }
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError("email","Enter a valid email (e.g. johndoe@gmail.com)."); valid = false; }
 
   const contact = document.getElementById("contact").value.trim();
-  if (!contact)                      { showError("contact","Phone number is required."); valid = false; }
+  if (!contact)                       { showError("contact","Phone number is required."); valid = false; }
   else if (countDigits(contact) !== 9) { showError("contact","Phone number must be exactly 9 digits (e.g. 677123456)."); valid = false; }
 
   const date = document.getElementById("date").value;
-  if (!date)                         { showError("date","Date of birth is required."); valid = false; }
+  if (!date)                          { showError("date","Date of birth is required."); valid = false; }
   else if (new Date(date) >= new Date()) { showError("date","Date of birth must be in the past."); valid = false; }
 
-  if (!document.getElementById("place").value.trim()) { showError("place","Place of birth is required."); valid = false; }
-  if (!document.getElementById("gender").value)       { showError("gender","Please select your gender."); valid = false; }
+  if (!document.getElementById("place").value.trim())  { showError("place","Place of birth is required."); valid = false; }
+  if (!document.getElementById("gender").value)        { showError("gender","Please select your gender."); valid = false; }
 
   return valid;
 }
@@ -139,8 +119,8 @@ function validateStep4() {
   if (!eName) { showError("emergencyName","Emergency contact name is required."); valid = false; }
 
   const ePhone = document.getElementById("emergencyPhone").value.trim();
-  if (!ePhone)                         { showError("emergencyPhone","Emergency contact phone is required."); valid = false; }
-  else if (countDigits(ePhone) !== 9)  { showError("emergencyPhone","Phone number must be exactly 9 digits (e.g. 677123456)."); valid = false; }
+  if (!ePhone)                        { showError("emergencyPhone","Emergency contact phone is required."); valid = false; }
+  else if (countDigits(ePhone) !== 9) { showError("emergencyPhone","Phone number must be exactly 9 digits (e.g. 677123456)."); valid = false; }
 
   const checkbox = document.getElementById("agreeCheckbox");
   const existingCheckErr = document.getElementById("err-agreeCheckbox");
@@ -163,7 +143,6 @@ function validateStep4() {
   return valid;
 }
 
-// ── Submit button state helpers ────────────────
 
 function setSubmitting(btn) {
   btn.disabled = true;
@@ -176,7 +155,7 @@ function resetSubmit(btn) {
   btn.innerHTML = btn.dataset.original;
 }
 
-// ── Step 1 ─────────────────────────────────────
+
 
 const step1Form = document.getElementById("step1Form");
 if (step1Form) {
@@ -199,7 +178,7 @@ if (step1Form) {
   });
 }
 
-// ── Step 2 ─────────────────────────────────────
+
 
 const step2Form = document.getElementById("step2Form");
 if (step2Form) {
@@ -220,7 +199,7 @@ if (step2Form) {
   });
 }
 
-// ── Step 3 ─────────────────────────────────────
+
 
 const step3Form = document.getElementById("step3Form");
 if (step3Form) {
@@ -239,7 +218,7 @@ if (step3Form) {
   });
 }
 
-// ── Step 4 — Final submit ──────────────────────
+
 
 const step4Form = document.getElementById("step4Form");
 if (step4Form) {
@@ -276,55 +255,58 @@ if (step4Form) {
     setSubmitting(submitBtn);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/students", {
+      const response = await fetch(API_BASE + "/students", {
         method: "POST",
-        body: formData,
+        body:   formData,
       });
 
       if (!response.ok) {
-        // Pass the HTTP status code to the error page
-        throw new Error(response.status + "|" + response.statusText);
+        let serverMsg = response.statusText || "Server error";
+        try {
+          const errBody = await response.json();
+          serverMsg = errBody.detail || errBody.message || errBody.error || serverMsg;
+        } catch { /* body wasn't JSON */ }
+        throw new Error(response.status + "|" + serverMsg);
       }
 
-      const result = await response.json();
+      let result = {};
+      try {
+        const rawText = await response.text();
+        result = rawText ? JSON.parse(rawText) : {};
+      } catch { /* response was OK but not JSON — still success */ }
 
-      // Save key info for the success page summary display,
-      // then clear the full multi-step form data
+      // Save summary for success page then clear form data
       const saved = getSavedData();
       localStorage.setItem("identix_form_data", JSON.stringify({
         firstname:  saved.firstname  || "",
         secondname: saved.secondname || "",
         email:      saved.email      || "",
         school:     saved.school     || "",
-        ref:        result.ref_number || "",
+        ref:        result.ref_number || result.id || result.ref || "",
       }));
+      localStorage.removeItem(STORAGE_KEY);
 
-      // ✅ Redirect to success page (no alert)
-      window.location.href = "success.html";
+      setTimeout(function() {
+        window.location.href = "success.html";
+      }, 300);
 
     } catch (error) {
       resetSubmit(submitBtn);
 
-      // Separate HTTP errors (status|text) from network/fetch errors
       const raw   = error.message || "Unknown error";
       const parts = raw.split("|");
-
       let code = "";
       let msg  = raw;
 
       if (parts.length === 2 && !isNaN(parts[0])) {
-        // HTTP error thrown above, e.g. "500|Internal Server Error"
         code = parts[0];
         msg  = parts[1] || "Server error";
       } else if (raw.toLowerCase().includes("failed to fetch")) {
-        // Backend is not running or unreachable
-        msg = "Could not connect to the server. Make sure the backend is running on port 8000 and try again.";
+        msg = "Could not connect to the server. Please check your internet connection and try again.";
       } else if (raw.toLowerCase().includes("networkerror")) {
         msg = "A network error occurred. Please check your internet connection.";
       }
 
-      // Redirect to error.html — URLSearchParams encodes values automatically.
-      // Do NOT use encodeURIComponent here — it would cause double-encoding.
       const params = new URLSearchParams();
       if (code) params.set("code", code);
       params.set("msg", msg);
